@@ -1,0 +1,208 @@
+<div class="n8n-prediction-widget">
+    <div class="prediction-header">
+        <h4>ANALYSE PRÉDICTIVE PL 25/26</h4>
+    </div>
+    
+    <div class="prediction-form-wrapper">
+        <div class="select-container">
+            <label>Domicile</label>
+            <select id="team1">
+                <option value="" disabled selected>Choisir l'équipe</option>
+                <option value="Arsenal">Arsenal</option>
+                <option value="Aston Villa">Aston Villa</option>
+                <option value="Bournemouth">Bournemouth</option>
+                <option value="Brentford">Brentford</option>
+                <option value="Brighton">Brighton & Hove Albion</option>
+                <option value="Chelsea">Chelsea</option>
+                <option value="Crystal Palace">Crystal Palace</option>
+                <option value="Everton">Everton</option>
+                <option value="Fulham">Fulham</option>
+                <option value="Ipswich Town">Ipswich Town</option>
+                <option value="Leicester City">Leicester City</option>
+                <option value="Liverpool">Liverpool</option>
+                <option value="Manchester City">Manchester City</option>
+                <option value="Manchester United">Manchester United</option>
+                <option value="Newcastle United">Newcastle United</option>
+                <option value="Nottingham Forest">Nottingham Forest</option>
+                <option value="Southampton">Southampton</option>
+                <option value="Tottenham Hotspur">Tottenham Hotspur</option>
+                <option value="West Ham United">West Ham United</option>
+                <option value="Wolverhampton">Wolverhampton Wanderers</option>
+            </select>
+        </div>
+
+        <div class="vs-divider">VS</div>
+
+        <div class="select-container">
+            <label>Extérieur</label>
+            <select id="team2">
+                <option value="" disabled selected>Choisir l'équipe</option>
+                <option value="Arsenal">Arsenal</option>
+                <option value="Aston Villa">Aston Villa</option>
+                <option value="Bournemouth">Bournemouth</option>
+                <option value="Brentford">Brentford</option>
+                <option value="Brighton">Brighton & Hove Albion</option>
+                <option value="Chelsea">Chelsea</option>
+                <option value="Crystal Palace">Crystal Palace</option>
+                <option value="Everton">Everton</option>
+                <option value="Fulham">Fulham</option>
+                <option value="Ipswich Town">Ipswich Town</option>
+                <option value="Leicester City">Leicester City</option>
+                <option value="Liverpool">Liverpool</option>
+                <option value="Manchester City">Manchester City</option>
+                <option value="Manchester United">Manchester United</option>
+                <option value="Newcastle United">Newcastle United</option>
+                <option value="Nottingham Forest">Nottingham Forest</option>
+                <option value="Southampton">Southampton</option>
+                <option value="Tottenham Hotspur">Tottenham Hotspur</option>
+                <option value="West Ham United">West Ham United</option>
+                <option value="Wolverhampton">Wolverhampton Wanderers</option>
+            </select>
+        </div>
+        
+        <button type="button" id="submitBtn">LANCER L'ANALYSE IA</button>
+    </div>
+
+    <div id="loader" class="prediction-hidden">
+        <div class="prediction-spinner"></div>
+        <p>Interrogation de la base Neo4j...</p>
+    </div>
+
+    <div id="resultContainer" class="prediction-hidden">
+        <div class="result-header">Rapport d'Expertise</div>
+        <div id="aiResponse"></div>
+    </div>
+</div>
+
+<style>
+    .n8n-prediction-widget {
+        background: #0f172a;
+        padding: 25px;
+        border-radius: 12px;
+        color: #f8fafc;
+        border: 1px solid #1e293b;
+        font-family: sans-serif;
+    }
+    .prediction-header h4 {
+        margin: 0 0 20px 0;
+        text-align: center;
+        color: #38bdf8;
+        letter-spacing: 1px;
+    }
+    .prediction-form-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .select-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .select-container label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #94a3b8;
+        font-weight: bold;
+    }
+    .n8n-prediction-widget select {
+        padding: 12px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: white;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .vs-divider {
+        text-align: center;
+        font-weight: bold;
+        color: #38bdf8;
+        font-size: 12px;
+    }
+    .n8n-prediction-widget button {
+        background: #38bdf8;
+        color: #0f172a;
+        border: none;
+        padding: 15px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 10px;
+    }
+    .n8n-prediction-widget button:hover { background: #0ea5e9; }
+    .n8n-prediction-widget button:disabled { opacity: 0.5; }
+    
+    .prediction-hidden { display: none; }
+    #resultContainer {
+        margin-top: 25px;
+        padding: 20px;
+        background: #1e293b;
+        border-radius: 8px;
+        border-top: 3px solid #38bdf8;
+    }
+    .result-header {
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #38bdf8;
+        text-transform: uppercase;
+        font-size: 13px;
+    }
+    #aiResponse { font-size: 14px; line-height: 1.6; color: #cbd5e1; }
+    .prediction-spinner {
+        border: 3px solid rgba(255,255,255,0.1);
+        width: 30px; height: 30px;
+        border-radius: 50%; border-left-color: #38bdf8;
+        animation: spin 1s linear infinite;
+        margin: 15px auto;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+
+<script>
+(function() {
+    const WEBHOOK_URL = 'https://ksstcyber1.app.n8n.cloud/webhook/predict-match';
+
+    const btn = document.getElementById('submitBtn');
+    const t1 = document.getElementById('team1');
+    const t2 = document.getElementById('team2');
+    const loader = document.getElementById('loader');
+    const result = document.getElementById('resultContainer');
+    const responseDiv = document.getElementById('aiResponse');
+
+    btn.addEventListener('click', async () => {
+        if(!t1.value || !t2.value) return alert("Veuillez sélectionner deux équipes");
+        if(t1.value === t2.value) return alert("Veuillez choisir deux équipes différentes");
+
+        btn.disabled = true;
+        loader.classList.remove('prediction-hidden');
+        result.classList.add('prediction-hidden');
+
+        try {
+            const resp = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    team1: t1.value, 
+                    team2: t2.value,
+                    message: `Analyse le match ${t1.value} vs ${t2.value}` 
+                })
+            });
+
+            const data = await resp.json();
+            // Formate le texte pour l'affichage WordPress
+            responseDiv.innerHTML = data.output
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#38bdf8">$1</strong>');
+            
+            result.classList.remove('prediction-hidden');
+        } catch (err) {
+            responseDiv.innerHTML = "❌ Erreur : Impossible de contacter l'IA.";
+            result.classList.remove('prediction-hidden');
+        } finally {
+            loader.classList.add('prediction-hidden');
+            btn.disabled = false;
+        }
+    });
+})();
+</script>
